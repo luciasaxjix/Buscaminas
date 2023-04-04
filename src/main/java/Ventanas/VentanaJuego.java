@@ -5,6 +5,8 @@
 package Ventanas;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JButton;
 
 /**
@@ -13,24 +15,60 @@ import javax.swing.JButton;
  */
 public class VentanaJuego extends javax.swing.JFrame {
 
+    
     private int SIZE = 8;
+    private int CANTIDAD_MINAS = 15;
+    
+    
     
     private JButton[][] botonesJuego;
+    
+    private int matrizMinas[][];
     
     /**
      * Creates new form VentanaJuego
      */
     public VentanaJuego() {
         initComponents();
-        crearTablero(SIZE);
+        crearTablero(SIZE, CANTIDAD_MINAS);
     }
 
-   private void crearTablero(int tam) {
+   private void crearTablero(int tam, int cantidadMinas) {
+       matrizMinas = new int[tam][tam];
+       
+       for (int i = 0; i < cantidadMinas; i++){
+           boolean agregado = false;
+           do{
+               int f,c;
+               f = (int)(Math.random()*8);
+               c = (int)(Math.random()*8);
+               if (matrizMinas[f][c]==0){
+                   matrizMinas[f][c] = 1;
+                   agregado = true;
+               }
+           }while(!agregado);
+       }
+       
         botonesJuego = new JButton[tam][tam];
         for (int i = 0; i < tam; i++) {
             for (int j = 0; j < tam; j++) {
                 botonesJuego[i][j] = new JButton();
-                botonesJuego[i][j].setBackground(Color.GRAY);
+                botonesJuego[i][j].setBackground(Color.LIGHT_GRAY);
+
+                botonesJuego[i][j].addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        for (int i = 0; i < 8; i++) {
+                            for (int j = 0; j < 8; j++) {
+                                if(botonesJuego[i][j]==e.getSource()){
+                                    checkCasilla(i,j);
+                                }
+                            }
+                        }
+                        
+                    }
+                });
+                
+                
                 tableroPanel.add(botonesJuego[i][j]);
                 
             }
@@ -38,6 +76,19 @@ public class VentanaJuego extends javax.swing.JFrame {
         
         
     }
+   
+   
+   
+   public boolean checkCasilla(int fil, int col){
+      if(matrizMinas[fil][col]==1){
+          System.out.println("BUM");
+          return true;
+      }
+      System.out.println("nada XD");
+      return false;
+
+      
+   }
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -52,6 +103,7 @@ public class VentanaJuego extends javax.swing.JFrame {
         jTextField1 = new javax.swing.JTextField();
         jTextField2 = new javax.swing.JTextField();
         tableroPanel = new javax.swing.JPanel();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMaximumSize(new java.awt.Dimension(364, 300));
@@ -66,33 +118,41 @@ public class VentanaJuego extends javax.swing.JFrame {
 
         tableroPanel.setLayout(new java.awt.GridLayout(8, 8));
 
+        jButton1.setText("jButton1");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(171, 171, 171)
+                                .addComponent(jButton1)
+                                .addGap(90, 90, 90)
                                 .addComponent(jLabel1))
                             .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
                                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
                                 .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(tableroPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(tableroPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -104,6 +164,10 @@ public class VentanaJuego extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -141,6 +205,7 @@ public class VentanaJuego extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
