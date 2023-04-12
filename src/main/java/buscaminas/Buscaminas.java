@@ -6,10 +6,7 @@ package buscaminas;
 
 import Ventanas.VentanaJuego;
 
-/**
- *
- * @author jerem
- */
+
 public class Buscaminas {
 
     public static void main(String[] args) {

@@ -7,24 +7,29 @@ package Ventanas;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 
-/**
- *
- * @author jerem
- */
 public class VentanaJuego extends javax.swing.JFrame {
 
-    
     private int SIZE = 8;
-    private int CANTIDAD_MINAS = 15;
-    
-    
-    
+    private int CANTIDAD_MINAS = 10;
+
+    private int segundos = 0, minutos = 0, horas = 0;
+    private long inicio = 0;
+    private Thread hilo;
+
     private JButton[][] botonesJuego;
-    
+
     private int matrizMinas[][];
-    
+    private int matrizMinasRevisadas[][];
+
+    private int minasEncontradas = 0;
+
+    private boolean gameover = false;
+
     /**
      * Creates new form VentanaJuego
      */
@@ -33,92 +38,210 @@ public class VentanaJuego extends javax.swing.JFrame {
         crearTablero(SIZE, CANTIDAD_MINAS);
     }
 
-   private void crearTablero(int tam, int cantidadMinas) {
-       matrizMinas = new int[tam][tam];
-       
-       for (int i = 0; i < cantidadMinas; i++){
-           boolean agregado = false;
-           do{
-               int f,c;
-               f = (int)(Math.random()*8);
-               c = (int)(Math.random()*8);
-               if (matrizMinas[f][c]==0){
-                   matrizMinas[f][c] = 1;
-                   agregado = true;
-               }
-           }while(!agregado);
-       }
-       
+    private void crearTablero(int tam, int cantidadMinas) {
+        matrizMinas = new int[tam][tam];
+        matrizMinasRevisadas = new int[tam][tam];
+
+        for (int i = 0; i < cantidadMinas; i++) {
+            boolean agregado = false;
+            do {
+                int f, c;
+                f = (int) (Math.random() * 8);
+                c = (int) (Math.random() * 8);
+                if (matrizMinas[f][c] == 0) {
+                    matrizMinas[f][c] = 1;
+                    agregado = true;
+                }
+            } while (!agregado);
+        }
+
         botonesJuego = new JButton[tam][tam];
         for (int i = 0; i < tam; i++) {
             for (int j = 0; j < tam; j++) {
                 botonesJuego[i][j] = new JButton();
-                botonesJuego[i][j].setBackground(Color.LIGHT_GRAY);
+                botonesJuego[i][j].setBackground(Color.GREEN);
 
                 botonesJuego[i][j].addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        for (int i = 0; i < 8; i++) {
-                            for (int j = 0; j < 8; j++) {
-                                if(botonesJuego[i][j]==e.getSource()){
-                                    checkCasilla(i,j);
+                        if (!gameover) {
+                            for (int i = 0; i < 8; i++) {
+                                for (int j = 0; j < 8; j++) {
+                                    if (botonesJuego[i][j] == e.getSource() && botonesJuego[i][j].getBackground() != Color.RED) {
+                                        matrizMinasRevisadas[i][j] = 1;
+                                        if (checkCasilla(i, j)) {
+                                            JOptionPane.showMessageDialog(null, "Has perdido.");
+                                            gameover = true;
+                                        } else {
+                                            verificarCasilla(i, j);
+                                            turnoComputadora();
+                                        }
+                                    }
                                 }
                             }
                         }
-                        
+
                     }
+                }
+                );
+                botonesJuego[i][j].addMouseListener(new MouseListener() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        if (e.getButton() == 3 && !gameover) {
+                            for (int i = 0; i < 8; i++) {
+                                for (int j = 0; j < 8; j++) {
+                                    if (botonesJuego[i][j] == e.getSource()) {
+                                        if (botonesJuego[i][j].getBackground() != Color.RED) {
+                                            botonesJuego[i][j].setBackground(Color.RED);
+                                            minasEncontradas += 1;
+                                            jTextField1.setText(String.valueOf(minasEncontradas));
+                                        } else {
+                                            botonesJuego[i][j].setBackground(Color.GREEN);
+                                            minasEncontradas -= 1;
+                                            jTextField1.setText(String.valueOf(minasEncontradas));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                    }
+
                 });
-                
-                
+
                 tableroPanel.add(botonesJuego[i][j]);
-                
+
             }
         }
-        
-        
+        iniciarCronometro();
     }
-   
-   
-   
-   public boolean checkCasilla(int fil, int col){
-      if(matrizMinas[fil][col]==1){
-          System.out.println("BUM");
-          return true;
-      }
-      System.out.println("nada XD");
-      return false;
 
-      
-   }
-    
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
+    void iniciarCronometro() {
+        Runnable runna;
+        runna = new Runnable() {
+            public void run() {
+                inicio = System.currentTimeMillis();
+                while (true) {
+                    long actual = System.currentTimeMillis();
+                    segundos = (int) ((actual - inicio) / 1000);
+                    minutos = segundos / 60;
+                    horas = minutos / 60;
+
+                    minutos = minutos % 60;
+                    segundos = segundos % 60;
+
+                    labelCronometro.setText(horas + ":" + minutos + ":" + segundos);
+                }
+            }
+
+        };
+        hilo = new Thread(runna);
+        hilo.start();
+    }
+
+    public void verificarCasilla(int fil, int col) {
+
+        int contador = 0;
+        for (int i = -1; i < 2; i++) {
+            for (int j = -1; j < 2; j++) {
+                if (fil + i >= 0 && col + j >= 0 && fil + i <= 7 && col + j <= 7) {
+                    if (checkCasilla(fil + i, col + j)) {
+                        contador++;
+                    }
+                }
+            }
+        }
+        botonesJuego[fil][col].setBackground(Color.LIGHT_GRAY);
+        botonesJuego[fil][col].setEnabled(false);
+        if (contador == 0) {
+            for (int i = -1; i < 2; i++) {
+                for (int j = -1; j < 2; j++) {
+                    if (!(i == 0 && j == 0)) {
+                        if (fil + i >= 0 && col + j >= 0 && fil + i <= 7 && col + j <= 7) {
+                            if (matrizMinasRevisadas[fil + i][col + j] != 1) {
+                                matrizMinasRevisadas[fil + i][col + j] = 1;
+                                verificarCasilla(fil + i, col + j);
+
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            botonesJuego[fil][col].setText(String.valueOf(contador));
+        }
+
+    }
+
+    public void turnoComputadora() {
+        boolean agregado = false;
+        do {
+            int f, c;
+            f = (int) (Math.random() * 8);
+            c = (int) (Math.random() * 8);
+            if (botonesJuego[f][c].isEnabled()) {
+                matrizMinasRevisadas[f][c] = 1;
+                if (checkCasilla(f, c)) {
+                    JOptionPane.showMessageDialog(null, "La computadora ha perdido.");
+                    gameover = true;
+                } else {
+                    verificarCasilla(f, c);
+                }
+                agregado = true;
+            }
+        } while (!agregado);
+
+    }
+
+    public boolean checkCasilla(int fil, int col) {
+        return matrizMinas[fil][col] == 1;
+
+    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
-        jTextField2 = new javax.swing.JTextField();
         tableroPanel = new javax.swing.JPanel();
+        labelCronometro = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMaximumSize(new java.awt.Dimension(364, 300));
         setMinimumSize(new java.awt.Dimension(364, 300));
-        setResizable(false);
 
         jLabel1.setText("Juego");
 
-        jTextField1.setText("jTextField1");
-
-        jTextField2.setText("jTextField1");
+        jTextField1.setEditable(false);
+        jTextField1.setText("0");
+        jTextField1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextField1ActionPerformed(evt);
+            }
+        });
 
         tableroPanel.setLayout(new java.awt.GridLayout(8, 8));
 
-        jButton1.setText("jButton1");
+        labelCronometro.setText("00:00");
+
+        jLabel2.setText("Minas encontradas:");
+
+        jButton1.setText("Reiniciar");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -132,18 +255,21 @@ public class VentanaJuego extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(tableroPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(labelCronometro))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton1)
-                                .addGap(90, 90, 90)
-                                .addComponent(jLabel1))
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jButton1))
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(tableroPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 76, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -156,17 +282,26 @@ public class VentanaJuego extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tableroPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(tableroPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 205, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(labelCronometro)
                 .addContainerGap())
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
+    }//GEN-LAST:event_jTextField1ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        VentanaJuego v = new VentanaJuego();
+        v.setVisible(true);
+        this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
@@ -207,8 +342,9 @@ public class VentanaJuego extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
+    private javax.swing.JLabel labelCronometro;
     private javax.swing.JPanel tableroPanel;
     // End of variables declaration//GEN-END:variables
 }
