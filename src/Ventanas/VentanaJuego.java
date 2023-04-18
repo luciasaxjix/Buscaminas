@@ -4,11 +4,14 @@
  */
 package Ventanas;
 
+import Listas.Pistas.Nodo;
+import Listas.Pistas.Pila;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Random;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -34,7 +37,9 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     private int fila_control = 0;
     private int colum_control = 0;
-    
+
+    private int turnos_pista = 0;
+    private Pila listaPistas = new Pila();
 
     /**
      * Creates new form VentanaJuego
@@ -42,6 +47,44 @@ public class VentanaJuego extends javax.swing.JFrame {
     public VentanaJuego() {
         initComponents();
         crearTablero(SIZE, CANTIDAD_MINAS);
+    }
+
+    private void mostrarPista() {
+
+        Nodo temp = listaPistas.head;
+
+        while (temp != null) {
+
+            //TODO comprobar pistas
+            if (botonesJuego[temp.getFila()][temp.getColumna()].isEnabled()) {
+                botonesJuego[temp.getFila()][temp.getColumna()].setBackground(Color.blue);
+                break;
+            }
+            temp = temp.next;
+
+        }
+
+    }
+
+    private void cargarPista() {
+        if (turnos_pista >= 5) {
+            turnos_pista = 0;
+
+            while (true) {
+                int fil, col;
+                Random ran = new Random();
+                fil = ran.nextInt(SIZE);
+                col = ran.nextInt(SIZE);
+
+                if (botonesJuego[fil][col].isEnabled() && !checkCasilla(fil, col)) {
+                    if (!listaPistas.existePista(fil, col)) {
+                        listaPistas.insertarPista(fil, col);
+                        break;
+                    }
+                }
+            }
+
+        }
     }
 
     private void crearTablero(int tam, int cantidadMinas) {
@@ -80,6 +123,8 @@ public class VentanaJuego extends javax.swing.JFrame {
                                             gameover = true;
                                         } else {
                                             verificarCasilla(i, j);
+                                            turnos_pista++;
+                                            cargarPista();
                                             turnoComputadora();
                                         }
                                     }
@@ -160,6 +205,7 @@ public class VentanaJuego extends javax.swing.JFrame {
                 while (!gameover) {
                     try {
                         
+
                         if (comunicador.isNuevoEvento()) {
                             String[] dato = comunicador.getDato();
                             if (dato != null && dato.length == 1) {
@@ -205,7 +251,7 @@ public class VentanaJuego extends javax.swing.JFrame {
                                                 comunicador.escribir(2);
                                                 JOptionPane.showMessageDialog(null, "Has perdido.");
                                                 gameover = true;
-                                                
+
                                             } else {
                                                 verificarCasilla(fila_control, colum_control);
                                                 turnoComputadora();
@@ -230,7 +276,7 @@ public class VentanaJuego extends javax.swing.JFrame {
                                 comunicador.setNuevoEvento(false);
                             }
                         }
-                        if(gameover){
+                        if (gameover) {
                             comunicador.escribir(2);
                         }
                         Thread.sleep(200);
@@ -248,7 +294,7 @@ public class VentanaJuego extends javax.swing.JFrame {
         runna = new Runnable() {
             public void run() {
                 inicio = System.currentTimeMillis();
-                while (true) {
+                while (!gameover) {
                     long actual = System.currentTimeMillis();
                     segundos = (int) ((actual - inicio) / 1000);
                     minutos = segundos / 60;
@@ -322,7 +368,6 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     public boolean checkCasilla(int fil, int col) {
         return matrizMinas[fil][col] == 1;
-
     }
 
     @SuppressWarnings("unchecked")
@@ -335,6 +380,9 @@ public class VentanaJuego extends javax.swing.JFrame {
         labelCronometro = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jComboBox1 = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(364, 300));
@@ -362,6 +410,22 @@ public class VentanaJuego extends javax.swing.JFrame {
             }
         });
 
+        jButton2.setText("Pista");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Dificultad");
+
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Facil", "Dificil" }));
+        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -371,28 +435,30 @@ public class VentanaJuego extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(tableroPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jButton1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(labelCronometro))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jButton1))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel2)
+                                .addComponent(jLabel3)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 76, Short.MAX_VALUE)))
+                                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jButton1))
+                .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -400,7 +466,14 @@ public class VentanaJuego extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(tableroPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 205, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(labelCronometro)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelCronometro)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2))
                 .addContainerGap())
         );
 
@@ -413,10 +486,19 @@ public class VentanaJuego extends javax.swing.JFrame {
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        comunicador.desconectar();
         VentanaJuego v = new VentanaJuego();
         v.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        mostrarPista();
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboBox1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -455,8 +537,11 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JLabel labelCronometro;
     private javax.swing.JPanel tableroPanel;
