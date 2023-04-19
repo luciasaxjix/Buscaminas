@@ -51,13 +51,12 @@ public class Comunicador implements SerialPortEventListener{
                         dato = texto.split(",");
                         nuevoEvento = true;
                         texto = "";
-                        System.out.println(dato);
                     }
                 }
             }catch(Exception e){
                 System.out.println("ERROR lectura: "+e.getMessage());
-            }//llave catch
-        }//llave if
+            }
+        }
     }
 
     /***
@@ -66,7 +65,6 @@ public class Comunicador implements SerialPortEventListener{
      */
     public String obtenerPuerto(){
         cuantosPuertos=CommPortIdentifier.getPortIdentifiers();
-        String resultado="";
         while(cuantosPuertos.hasMoreElements()){
             CommPortIdentifier puerto=(CommPortIdentifier)cuantosPuertos.nextElement();
             if(puerto.getPortType()==CommPortIdentifier.PORT_SERIAL){
@@ -76,7 +74,7 @@ public class Comunicador implements SerialPortEventListener{
                 }
 
             }
-        }//LLAVE WHILE
+        }
         return null;
     }
 
@@ -85,7 +83,6 @@ public class Comunicador implements SerialPortEventListener{
      * @param cualPuerto puerto a conectar
      */
     public void conectar(String cualPuerto){
-        System.out.println(cualPuerto);
         portId=(CommPortIdentifier) portMap.get(cualPuerto);
         CommPort commport=null;
         try{
@@ -97,14 +94,14 @@ public class Comunicador implements SerialPortEventListener{
         }catch(Exception e){
             System.out.println("ERROR: "+e.getMessage());
         }
-    }//llave conectar
+    }
 
     public void setConectado(boolean estado){
         this.conectado=estado;
-    }//llave setConectado
+    }
     public boolean getConectado(){
         return this.conectado;
-    }//llave getConectado
+    }
 
     /***
      * Desconecta la conexion con el puerto serial

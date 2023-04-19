@@ -51,12 +51,19 @@ void loop() {
 
   int serial = Serial.parseInt(); 
 
-  if(serial == 2){
-    analogWrite(A0, 500);
-    digitalWrite(aviso, HIGH);
-    tone(9, 300);
+  if(serial == 1){
+    
+    tone(9, 400);
     delay(1000);
     noTone(9);
+  }
+  if(serial == 2){
+    tone(9, 100);
+    delay(1000);
+    noTone(9);
+  }
+  if(serial == 3){
+    digitalWrite(aviso, HIGH);
   }
   else{
     digitalWrite(aviso, LOW);

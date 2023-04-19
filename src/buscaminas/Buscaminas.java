@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package buscaminas;
 
 import Ventanas.VentanaJuego;
@@ -10,7 +6,8 @@ import Ventanas.VentanaJuego;
 public class Buscaminas {
 
     public static void main(String[] args) {
+        //Corre ventana principal
         VentanaJuego r = new VentanaJuego();
-        r.setVisible(true);
+        r.setVisible(true);      
     }
 }

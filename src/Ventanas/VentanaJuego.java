@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package Ventanas;
 
 import Listas.Pistas.Nodo;
@@ -18,6 +14,7 @@ import javax.swing.JOptionPane;
 
 public class VentanaJuego extends javax.swing.JFrame {
 
+    //Constantes que utiliza el juego
     private int SIZE = 8;
     private int CANTIDAD_MINAS = 10;
 
@@ -42,20 +39,21 @@ public class VentanaJuego extends javax.swing.JFrame {
     private Pila listaPistas = new Pila();
 
     /**
-     * Creates new form VentanaJuego
+     * Crea nuevo form de VentanaJuego, ademas inicia el tablero
      */
     public VentanaJuego() {
         initComponents();
         crearTablero(SIZE, CANTIDAD_MINAS);
     }
 
+    /***
+     * Muestra la primera pista disponible, cambiando el color del boton a azul
+     */
     private void mostrarPista() {
 
         Nodo temp = listaPistas.head;
 
         while (temp != null) {
-
-            //TODO comprobar pistas
             if (botonesJuego[temp.getFila()][temp.getColumna()].isEnabled()) {
                 botonesJuego[temp.getFila()][temp.getColumna()].setBackground(Color.blue);
                 break;
@@ -65,11 +63,14 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
 
     }
-
+    /***
+     * Verifica que hayan pasado 5 turnos del jugador para
+     * agregar una pista a la lista
+     */
     private void cargarPista() {
         if (turnos_pista >= 5) {
             turnos_pista = 0;
-
+            //busca aleatoriamente casillas que no contengan minas
             while (true) {
                 int fil, col;
                 Random ran = new Random();
@@ -87,12 +88,20 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
     }
 
+    
+    /***
+     * Crea el tablero y sus elementos
+     * @param tam
+     * @param cantidadMinas 
+     */
     private void crearTablero(int tam, int cantidadMinas) {
         matrizMinas = new int[tam][tam];
         matrizMinasRevisadas = new int[tam][tam];
 
+        //Ciclo que agrega minas de manera aleatoria
         for (int i = 0; i < cantidadMinas; i++) {
             boolean agregado = false;
+            //verifica que la mina no exista 
             do {
                 int f, c;
                 f = (int) (Math.random() * 8);
@@ -103,14 +112,18 @@ public class VentanaJuego extends javax.swing.JFrame {
                 }
             } while (!agregado);
         }
-
+        //matriz donde se almacenan los botones
         botonesJuego = new JButton[tam][tam];
+        
+        //ciclo que recorre la matriz de botones y le agrega sus propiedades y funciones
+        
         for (int i = 0; i < tam; i++) {
             for (int j = 0; j < tam; j++) {
                 botonesJuego[i][j] = new JButton();
                 botonesJuego[i][j].setBackground(Color.GREEN);
                 botonesJuego[i][j].setBorder(BorderFactory.createBevelBorder(0));
 
+                //actionLister para la pulsacion del boton
                 botonesJuego[i][j].addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (!gameover) {
@@ -119,12 +132,16 @@ public class VentanaJuego extends javax.swing.JFrame {
                                     if (botonesJuego[i][j] == e.getSource() && botonesJuego[i][j].getBackground() != Color.RED) {
                                         matrizMinasRevisadas[i][j] = 1;
                                         if (checkCasilla(i, j)) {
+                                            comunicador.escribir(2);
                                             JOptionPane.showMessageDialog(null, "Has perdido.");
+                                            
                                             gameover = true;
                                         } else {
                                             verificarCasilla(i, j);
+                                            comunicador.escribir(1);
                                             turnos_pista++;
                                             cargarPista();
+                                            //inicia turno de la computadora
                                             turnoComputadora();
                                         }
                                     }
@@ -135,15 +152,20 @@ public class VentanaJuego extends javax.swing.JFrame {
                     }
                 }
                 );
+                //mouse listener para detectar los clicks
                 botonesJuego[i][j].addMouseListener(new MouseListener() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
+                        //verifica que el boton pulsado sea el derecho
                         if (e.getButton() == 3 && !gameover) {
+                            //ciclo para encontrar el boton pulsado
                             for (int i = 0; i < 8; i++) {
                                 for (int j = 0; j < 8; j++) {
                                     if (botonesJuego[i][j] == e.getSource()) {
+                                        //condicion para cambiar el color del boton
                                         if (botonesJuego[i][j].getBackground() != Color.RED) {
                                             botonesJuego[i][j].setBackground(Color.RED);
+                                            comunicador.escribir(3);
                                             minasEncontradas += 1;
                                             jTextField1.setText(String.valueOf(minasEncontradas));
                                         } else {
@@ -174,44 +196,58 @@ public class VentanaJuego extends javax.swing.JFrame {
                     }
 
                 });
-
+                
+                //agrega el boton al tablero
                 tableroPanel.add(botonesJuego[i][j]);
 
             }
         }
-
+        
+        //conecta el arduino, si falla el programa sigue
         conectarArduino();
-
+        
+        //inicia el cronometro
         iniciarCronometro();
     }
 
+    /***
+     * Trata de conectar el arduino, si falla no se inicia el hilo del comunicador
+     */
     private void conectarArduino() {
         comunicador.conectar(comunicador.obtenerPuerto());
         comunicador.iniciarIO();
         comunicador.initListener();
+        //si se conecta inicia el hilo
         if (comunicador.getConectado()) {
             iniciarControles();
             hilo.start();
         }
     }
 
+    /***
+     * inicia el receptor de senales enviadas por arduino por medio del puerto serial
+     */
     void iniciarControles() {
 
+        //pone borde diferente para indicar donde se encuentra el jugador
         botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0, Color.green, Color.orange, Color.red, Color.blue));
 
+        //hilo que se encarga de leer las peticiones
         hilo = new Thread() {
             @Override
             public void run() {
                 while (!gameover) {
                     try {
                         
-
+                        // si existe un nuevo evento , lo lee y realiza la accion correspondiente
                         if (comunicador.isNuevoEvento()) {
                             String[] dato = comunicador.getDato();
                             if (dato != null && dato.length == 1) {
                                 switch (dato[0]) {
+                                    // cada numero representa una direcion
+                                    //0 = izquierda, 1= arriba, 2 = derecha, 3 = abajo
                                     case "0":
-                                        comunicador.escribir(1);
+                                        comunicador.escribir(0);
                                         if (colum_control > 0) {
                                             botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0));
                                             colum_control--;
@@ -220,7 +256,7 @@ public class VentanaJuego extends javax.swing.JFrame {
 
                                         break;
                                     case "1":
-                                        comunicador.escribir(1);
+                                        comunicador.escribir(0);
                                         if (fila_control > 0) {
                                             botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0));
                                             fila_control--;
@@ -228,7 +264,7 @@ public class VentanaJuego extends javax.swing.JFrame {
                                         }
                                         break;
                                     case "2":
-                                        comunicador.escribir(3);
+                                        comunicador.escribir(0);
                                         if (colum_control < 7) {
                                             botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0));
                                             colum_control++;
@@ -236,13 +272,15 @@ public class VentanaJuego extends javax.swing.JFrame {
                                         }
                                         break;
                                     case "3":
-                                        comunicador.escribir(4);
+                                        comunicador.escribir(0);
                                         if (fila_control < 7) {
                                             botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0));
                                             fila_control++;
                                             botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0, Color.green, Color.orange, Color.red, Color.blue));
                                         }
                                         break;
+                                        
+                                    //seleciona una casilla y verifica su estado
                                     case "4":
 
                                         if (botonesJuego[fila_control][colum_control].getBackground() != Color.RED) {
@@ -254,16 +292,19 @@ public class VentanaJuego extends javax.swing.JFrame {
 
                                             } else {
                                                 verificarCasilla(fila_control, colum_control);
+                                                comunicador.escribir(1);
                                                 turnoComputadora();
                                             }
                                         }
 
                                         break;
+                                     //marca la casilla
                                     case "5":
 
                                         if (botonesJuego[fila_control][colum_control].getBackground() != Color.RED) {
                                             botonesJuego[fila_control][colum_control].setBackground(Color.RED);
                                             minasEncontradas += 1;
+                                            comunicador.escribir(3);
                                             jTextField1.setText(String.valueOf(minasEncontradas));
                                         } else {
                                             botonesJuego[fila_control][colum_control].setBackground(Color.GREEN);
@@ -276,9 +317,7 @@ public class VentanaJuego extends javax.swing.JFrame {
                                 comunicador.setNuevoEvento(false);
                             }
                         }
-                        if (gameover) {
-                            comunicador.escribir(2);
-                        }
+                        //si el juego termino, envia senal a arduino
                         Thread.sleep(200);
                     } catch (InterruptedException ex) {
                     }
@@ -289,12 +328,18 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     }
 
+    
+    /***
+     * inicia el cronometro y lo actualiza en pantalla
+     */
     void iniciarCronometro() {
         Runnable runna;
         runna = new Runnable() {
             public void run() {
+                // guarda cuando inicio el cronometro
                 inicio = System.currentTimeMillis();
                 while (!gameover) {
+                    //calcula cuanto tiempo ha pasado
                     long actual = System.currentTimeMillis();
                     segundos = (int) ((actual - inicio) / 1000);
                     minutos = segundos / 60;
@@ -302,21 +347,30 @@ public class VentanaJuego extends javax.swing.JFrame {
 
                     minutos = minutos % 60;
                     segundos = segundos % 60;
-
+                    
+                    
+                    //actualiza el label
                     labelCronometro.setText(horas + ":" + minutos + ":" + segundos);
                 }
             }
 
         };
+        //inicia el hilo
         hilo = new Thread(runna);
         hilo.start();
     }
 
+    /**
+     * verifica y muestra las casillas vacias a su alrededor
+     * @param fil
+     * @param col 
+     */
     public void verificarCasilla(int fil, int col) {
 
         int contador = 0;
         for (int i = -1; i < 2; i++) {
             for (int j = -1; j < 2; j++) {
+                //verifica que este dentro de la matriz
                 if (fil + i >= 0 && col + j >= 0 && fil + i <= 7 && col + j <= 7) {
                     if (checkCasilla(fil + i, col + j)) {
                         contador++;
@@ -324,15 +378,20 @@ public class VentanaJuego extends javax.swing.JFrame {
                 }
             }
         }
+        //desactiva boton y lo vuelve gris
+       
         botonesJuego[fil][col].setBackground(Color.LIGHT_GRAY);
         botonesJuego[fil][col].setEnabled(false);
         if (contador == 0) {
             for (int i = -1; i < 2; i++) {
                 for (int j = -1; j < 2; j++) {
                     if (!(i == 0 && j == 0)) {
+                        //verifica que este dentro de la matriz
                         if (fil + i >= 0 && col + j >= 0 && fil + i <= 7 && col + j <= 7) {
+                            //verifica que la mina no haya sido revisada
                             if (matrizMinasRevisadas[fil + i][col + j] != 1) {
                                 matrizMinasRevisadas[fil + i][col + j] = 1;
+                                //verifica para mostrar la casilla
                                 verificarCasilla(fil + i, col + j);
 
                             }
@@ -345,27 +404,39 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
 
     }
-
+    /***
+     * Inicia el turno de la computadora
+     */
     public void turnoComputadora() {
         boolean agregado = false;
         do {
             int f, c;
             f = (int) (Math.random() * 8);
             c = (int) (Math.random() * 8);
+            //verifica que la casilla se pueda usar
             if (botonesJuego[f][c].isEnabled()) {
                 matrizMinasRevisadas[f][c] = 1;
+                //checkea si hay mina o no
                 if (checkCasilla(f, c)) {
+                    comunicador.escribir(2);
                     JOptionPane.showMessageDialog(null, "La computadora ha perdido.");
                     gameover = true;
                 } else {
+                    comunicador.escribir(1);
                     verificarCasilla(f, c);
                 }
+                //detiene el ciclo
                 agregado = true;
             }
         } while (!agregado);
 
     }
-
+    /***
+     * verifica si la casilla es mina
+     * @param fil
+     * @param col
+     * @return true si hay mina, false de lo contrario
+     */
     public boolean checkCasilla(int fil, int col) {
         return matrizMinas[fil][col] == 1;
     }
