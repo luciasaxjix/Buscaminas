@@ -16,7 +16,7 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     //Constantes que utiliza el juego
     private int SIZE = 8;
-    private int CANTIDAD_MINAS = 10;
+    private int CANTIDAD_MINAS = 1;
 
     private int segundos = 0, minutos = 0, horas = 0;
     private long inicio = 0;
@@ -46,7 +46,8 @@ public class VentanaJuego extends javax.swing.JFrame {
         crearTablero(SIZE, CANTIDAD_MINAS);
     }
 
-    /***
+    /**
+     * *
      * Muestra la primera pista disponible, cambiando el color del boton a azul
      */
     private void mostrarPista() {
@@ -63,9 +64,11 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
 
     }
-    /***
-     * Verifica que hayan pasado 5 turnos del jugador para
-     * agregar una pista a la lista
+
+    /**
+     * *
+     * Verifica que hayan pasado 5 turnos del jugador para agregar una pista a
+     * la lista
      */
     private void cargarPista() {
         if (turnos_pista >= 5) {
@@ -88,11 +91,28 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
     }
 
-    
-    /***
+    public void finJuego() {
+        boolean gano = true;
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if ((botonesJuego[i][j].isEnabled() && matrizMinas[i][j]==0)) {
+                    gano = false;
+                }
+            }
+        }
+
+        if (gano) {
+            JOptionPane.showMessageDialog(null, "El juego ha acabado.");
+        }
+
+    }
+
+    /**
+     * *
      * Crea el tablero y sus elementos
+     *
      * @param tam
-     * @param cantidadMinas 
+     * @param cantidadMinas
      */
     private void crearTablero(int tam, int cantidadMinas) {
         matrizMinas = new int[tam][tam];
@@ -114,9 +134,8 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
         //matriz donde se almacenan los botones
         botonesJuego = new JButton[tam][tam];
-        
+
         //ciclo que recorre la matriz de botones y le agrega sus propiedades y funciones
-        
         for (int i = 0; i < tam; i++) {
             for (int j = 0; j < tam; j++) {
                 botonesJuego[i][j] = new JButton();
@@ -134,13 +153,14 @@ public class VentanaJuego extends javax.swing.JFrame {
                                         if (checkCasilla(i, j)) {
                                             comunicador.escribir(2);
                                             JOptionPane.showMessageDialog(null, "Has perdido.");
-                                            
+
                                             gameover = true;
                                         } else {
                                             verificarCasilla(i, j);
                                             comunicador.escribir(1);
                                             turnos_pista++;
                                             cargarPista();
+                                            finJuego();
                                             //inicia turno de la computadora
                                             turnoComputadora();
                                         }
@@ -167,10 +187,13 @@ public class VentanaJuego extends javax.swing.JFrame {
                                             botonesJuego[i][j].setBackground(Color.RED);
                                             comunicador.escribir(3);
                                             minasEncontradas += 1;
+                                            finJuego();
+
                                             jTextField1.setText(String.valueOf(minasEncontradas));
                                         } else {
                                             botonesJuego[i][j].setBackground(Color.GREEN);
                                             minasEncontradas -= 1;
+                                            finJuego();
                                             jTextField1.setText(String.valueOf(minasEncontradas));
                                         }
                                     }
@@ -196,22 +219,24 @@ public class VentanaJuego extends javax.swing.JFrame {
                     }
 
                 });
-                
+
                 //agrega el boton al tablero
                 tableroPanel.add(botonesJuego[i][j]);
 
             }
         }
-        
+
         //conecta el arduino, si falla el programa sigue
         conectarArduino();
-        
+
         //inicia el cronometro
         iniciarCronometro();
     }
 
-    /***
-     * Trata de conectar el arduino, si falla no se inicia el hilo del comunicador
+    /**
+     * *
+     * Trata de conectar el arduino, si falla no se inicia el hilo del
+     * comunicador
      */
     private void conectarArduino() {
         comunicador.conectar(comunicador.obtenerPuerto());
@@ -224,8 +249,10 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
     }
 
-    /***
-     * inicia el receptor de senales enviadas por arduino por medio del puerto serial
+    /**
+     * *
+     * inicia el receptor de senales enviadas por arduino por medio del puerto
+     * serial
      */
     void iniciarControles() {
 
@@ -238,7 +265,7 @@ public class VentanaJuego extends javax.swing.JFrame {
             public void run() {
                 while (!gameover) {
                     try {
-                        
+
                         // si existe un nuevo evento , lo lee y realiza la accion correspondiente
                         if (comunicador.isNuevoEvento()) {
                             String[] dato = comunicador.getDato();
@@ -279,7 +306,7 @@ public class VentanaJuego extends javax.swing.JFrame {
                                             botonesJuego[fila_control][colum_control].setBorder(BorderFactory.createBevelBorder(0, Color.green, Color.orange, Color.red, Color.blue));
                                         }
                                         break;
-                                        
+
                                     //seleciona una casilla y verifica su estado
                                     case "4":
 
@@ -293,18 +320,20 @@ public class VentanaJuego extends javax.swing.JFrame {
                                             } else {
                                                 verificarCasilla(fila_control, colum_control);
                                                 comunicador.escribir(1);
+                                                finJuego();
                                                 turnoComputadora();
                                             }
                                         }
 
                                         break;
-                                     //marca la casilla
+                                    //marca la casilla
                                     case "5":
 
                                         if (botonesJuego[fila_control][colum_control].getBackground() != Color.RED) {
                                             botonesJuego[fila_control][colum_control].setBackground(Color.RED);
                                             minasEncontradas += 1;
                                             comunicador.escribir(3);
+                                            finJuego();
                                             jTextField1.setText(String.valueOf(minasEncontradas));
                                         } else {
                                             botonesJuego[fila_control][colum_control].setBackground(Color.GREEN);
@@ -328,8 +357,8 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     }
 
-    
-    /***
+    /**
+     * *
      * inicia el cronometro y lo actualiza en pantalla
      */
     void iniciarCronometro() {
@@ -347,8 +376,7 @@ public class VentanaJuego extends javax.swing.JFrame {
 
                     minutos = minutos % 60;
                     segundos = segundos % 60;
-                    
-                    
+
                     //actualiza el label
                     labelCronometro.setText(horas + ":" + minutos + ":" + segundos);
                 }
@@ -362,8 +390,9 @@ public class VentanaJuego extends javax.swing.JFrame {
 
     /**
      * verifica y muestra las casillas vacias a su alrededor
+     *
      * @param fil
-     * @param col 
+     * @param col
      */
     public void verificarCasilla(int fil, int col) {
 
@@ -379,7 +408,7 @@ public class VentanaJuego extends javax.swing.JFrame {
             }
         }
         //desactiva boton y lo vuelve gris
-       
+
         botonesJuego[fil][col].setBackground(Color.LIGHT_GRAY);
         botonesJuego[fil][col].setEnabled(false);
         if (contador == 0) {
@@ -404,7 +433,9 @@ public class VentanaJuego extends javax.swing.JFrame {
         }
 
     }
-    /***
+
+    /**
+     * *
      * Inicia el turno de la computadora
      */
     public void turnoComputadora() {
@@ -429,10 +460,14 @@ public class VentanaJuego extends javax.swing.JFrame {
                 agregado = true;
             }
         } while (!agregado);
+        finJuego();
 
     }
-    /***
+
+    /**
+     * *
      * verifica si la casilla es mina
+     *
      * @param fil
      * @param col
      * @return true si hay mina, false de lo contrario

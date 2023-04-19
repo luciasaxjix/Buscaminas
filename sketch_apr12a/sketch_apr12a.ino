@@ -48,26 +48,28 @@ void loop() {
   else if(digitalRead(btnmar) == LOW){
       Serial.println("5");    
   }
+  delay(500);
+  if(Serial.available()!=0){
+    int serial = Serial.parseInt(); 
 
-  int serial = Serial.parseInt(); 
-
-  if(serial == 1){
+    if(serial == 1){
     
-    tone(9, 400);
-    delay(1000);
-    noTone(9);
+      tone(9, 400);
+      delay(1000);
+      noTone(9);
+    }
+    if(serial == 2){
+      tone(9, 100);
+      delay(1000);
+      noTone(9);
+    }
+    if(serial == 3){
+      digitalWrite(aviso, HIGH);
+      delay(500);
+      digitalWrite(aviso, LOW);
+    }
+  
   }
-  if(serial == 2){
-    tone(9, 100);
-    delay(1000);
-    noTone(9);
-  }
-  if(serial == 3){
-    digitalWrite(aviso, HIGH);
-  }
-  else{
-    digitalWrite(aviso, LOW);
-    
-  }
+  
 
 }
